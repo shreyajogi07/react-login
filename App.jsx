@@ -1,147 +1,126 @@
-import { useState, useEffect } from "react";
-import * as React from 'react';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
-import { Grid, TextField, Card, Tooltip, Container, Menu, MenuItem } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { AppBar, Toolbar, Typography, Button, Container, TextField, Card, Grid, CardMedia, CardContent, CardActions } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-function ButtonAppBar() {
-  const [anchorEl, setAnchorEl] = useState(null);
+const products = [
+  { id: 1, name: "Smart Watch", price: 99.99, image: "https://via.placeholder.com/150" },
+  { id: 2, name: "Wireless Headphones", price: 79.99, image: "https://via.placeholder.com/150" },
+  { id: 3, name: "Gaming Mouse", price: 49.99, image: "https://via.placeholder.com/150" },
+  { id: 4, name: "Mechanical Keyboard", price: 120.00, image: "https://via.placeholder.com/150" }
+];
 
-  const handleMenuClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+function Navbar() {
+  return (
+    <AppBar position="static">
+      <Toolbar>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>Shopping App</Typography>
+        <Button color="inherit" href="/">Login</Button>
+      </Toolbar>
+    </AppBar>
+  );
+}
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
+function Login() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = () => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser && storedUser.username === username && storedUser.password === password) {
+      toast.success("Login successful!");
+      setTimeout(() => navigate("/shop"), 1500);
+    } else {
+      toast.error("Invalid credentials or user not registered!");
+    }
   };
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
-        <Toolbar>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ mr: 2 }}
-            onClick={handleMenuClick}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-          >
-            <MenuItem onClick={handleMenuClose}>Employee</MenuItem>
-            <MenuItem onClick={handleMenuClose}>Customer</MenuItem>
-          </Menu>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            News
-          </Typography>
-          <Button color="inherit">Login</Button>
-        </Toolbar>
-      </AppBar>
-    </Box>
+    <Container sx={{ textAlign: "center", mt: 5 }}>
+      <Card sx={{ p: 3, maxWidth: 400, margin: "auto" }}>
+        <Typography variant="h5" gutterBottom>Login</Typography>
+        <TextField fullWidth label="Username" margin="normal" value={username} onChange={(e) => setUsername(e.target.value)} />
+        <TextField fullWidth label="Password" type="password" margin="normal" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} onClick={handleLogin}>Login</Button>
+        <Button variant="outlined" color="secondary" fullWidth sx={{ mt: 2 }} onClick={() => navigate("/register")}>Register</Button>
+      </Card>
+      <ToastContainer position="top-right" autoClose={2000} />
+    </Container>
+  );
+}
+
+function Register() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleRegister = () => {
+    if (!username || !password) {
+      toast.error("Please enter both username and password!");
+      return;
+    }
+    localStorage.setItem("user", JSON.stringify({ username, password }));
+    toast.success("Registration successful! Please login.");
+    setTimeout(() => navigate("/"), 1500);
+  };
+
+  return (
+    <Container sx={{ textAlign: "center", mt: 5 }}>
+      <Card sx={{ p: 3, maxWidth: 400, margin: "auto" }}>
+        <Typography variant="h5" gutterBottom>Register</Typography>
+        <TextField fullWidth label="Username" margin="normal" value={username} onChange={(e) => setUsername(e.target.value)} />
+        <TextField fullWidth label="Password" type="password" margin="normal" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} onClick={handleRegister}>Register</Button>
+      </Card>
+      <ToastContainer position="top-right" autoClose={2000} />
+    </Container>
+  );
+}
+
+function Shop() {
+  const [cart, setCart] = useState([]);
+
+  const addToCart = (product) => {
+    setCart([...cart, product]);
+    toast.success(`${product.name} added to cart!`);
+  };
+
+  return (
+    <Container sx={{ mt: 3 }}>
+      <Typography variant="h4" gutterBottom>Shop Accessories</Typography>
+      <Grid container spacing={3}>
+        {products.map((product) => (
+          <Grid item xs={12} sm={6} md={3} key={product.id}>
+            <Card>
+              <CardMedia component="img" height="140" image={product.image} alt={product.name} />
+              <CardContent>
+                <Typography variant="h6">{product.name}</Typography>
+                <Typography variant="body1">${product.price.toFixed(2)}</Typography>
+              </CardContent>
+              <CardActions>
+                <Button variant="contained" color="primary" onClick={() => addToCart(product)}>Add to Cart</Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+      <ToastContainer position="top-right" autoClose={2000} />
+    </Container>
   );
 }
 
 function App() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [loginHistory, setLoginHistory] = useState([]);
-
-  useEffect(() => {
-    fetch("https://reqres.in/api/users?page=2")
-      .then((res) => res.json())
-      .then((data) => setLoginHistory(data.data))
-      .catch((error) => console.error("Error fetching users:", error));
-  }, []);
-
-  const handleLogin = async () => {
-    if (!firstName || !lastName) {
-      toast.error("Enter both First and Last Name!");
-      return;
-    }
-
-    const newUser = { first_name: firstName, last_name: lastName };
-    try {
-      const response = await fetch("https://reqres.in/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newUser),
-      });
-
-      const data = await response.json();
-      setLoginHistory([...loginHistory, { ...data, id: loginHistory.length + 1 }]);
-      setFirstName("");
-      setLastName("");
-      toast.success("User added successfully!");
-    } catch (error) {
-      console.error("Error creating user:", error);
-      toast.error("Failed to add user!");
-    }
-  };
-
   return (
-    <Box>
-      <ButtonAppBar />
-
-      <Container
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "100vh",
-          backgroundColor: "#f4f4f4",
-          p: 3,
-        }}
-      >
-        <ToastContainer position="top-right" autoClose={3000} />
-
-        <Card sx={{ p: 3, textAlign: "center", width: "50%", minHeight: "400px" }}>
-          <Typography variant="h5" gutterBottom>Login</Typography>
-          <TextField fullWidth margin="normal" label="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-          <TextField fullWidth margin="normal" label="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-          <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} onClick={handleLogin}>Login</Button>
-          <Typography variant="h5" gutterBottom sx={{ mt: 3 }}>Login History</Typography>
-          <Box sx={{ maxHeight: 230, overflowY: "auto", p: 1 }}>
-            {loginHistory.map((user) => (
-              <Grid container key={user.id} alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-                <Typography>{user.first_name} {user.last_name} - ID: {user.id}</Typography>
-                <Box>
-                  <Tooltip title="Edit User">
-                    <IconButton color="primary" size="small">
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete User">
-                    <IconButton color="error" size="small">
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              </Grid>
-            ))}
-          </Box>
-        </Card>
-      </Container>
-
-      <Box sx={{ mt: 4, p: 2, backgroundColor: "#1976d2", color: "white", textAlign: "center" }}>
-        <Typography variant="body1">&copy; 2025 User Management System</Typography>
-      </Box>
-    </Box>
+    <Router>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/shop" element={<Shop />} />
+      </Routes>
+    </Router>
   );
 }
 
